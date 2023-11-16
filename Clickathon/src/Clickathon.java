@@ -28,6 +28,9 @@ import java.util.Random;
 public class Clickathon extends JFrame {
     private static final int BUTTON_COUNT = 5;
     private static final int GAME_TIME = 15; // in seconds
+    private static final int MAX_POINT_VALUE = 5;
+    private static final int MIN_POINT_VALUE = 1;
+    private static final int SIZE_MULTIPLIER = 18;
 
     private JButton[] buttons = new JButton[BUTTON_COUNT];
     private int score = 0;
@@ -103,8 +106,13 @@ public class Clickathon extends JFrame {
     //create buttons to be used for the game
     private void createButtons() {
         for (int i = 0; i < BUTTON_COUNT; i++) {
-            buttons[i] = new JButton("Button " + (i + 1));
-            buttons[i].setSize(50, 50);
+	    //Generate button value
+	    Random random = new Random();
+	    int pointValue = random.nextInt((MAX_POINT_VALUE - MIN_POINT_VALUE) + 1) + MIN_POINT_VALUE;
+	    //The larger the point value, the smaller the size
+	    int buttonSize = (MAX_POINT_VALUE - pointValue + 1) * SIZE_MULTIPLIER;
+            buttons[i] = new JButton("" + pointValue);
+            buttons[i].setSize(buttonSize,buttonSize);
             buttons[i].addActionListener(new ButtonClickListener());
             add(buttons[i]);
         }
@@ -171,11 +179,16 @@ public class Clickathon extends JFrame {
     private class ButtonClickListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             JButton clickedButton = (JButton) e.getSource();
-            score++;
+            score += Integer.parseInt((clickedButton.getText()));
             scoreLabel.setText("Score: " + score);
-
+ 	    // Set the button to a random value	    
+	    Random random = new Random();
+	    int pointValue = random.nextInt((MAX_POINT_VALUE - MIN_POINT_VALUE) + 1) + MIN_POINT_VALUE;
+	    clickedButton.setText("" + pointValue);
+	    //Set the button to a size
+	    int buttonSize = (MAX_POINT_VALUE - pointValue + 1) * SIZE_MULTIPLIER;
+	    clickedButton.setSize(buttonSize, buttonSize);
             // Move the button to a random location
-            Random random = new Random();
             int x = random.nextInt(getWidth() - 100);
             int y = random.nextInt(getHeight() - 50);
             clickedButton.setLocation(x, y);
