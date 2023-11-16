@@ -41,7 +41,7 @@ public class Clickathon extends JFrame {
         setTitle("*~ CLICKATHON ~*");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(null); // Use absolute layout
+        //setLayout(null); // Use absolute layout
 
         createGameMenu();
 
@@ -58,21 +58,18 @@ public class Clickathon extends JFrame {
         JButton scoresButton = new JButton("High Scores");
 
         startButton.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(ActionEvent e) {
                 startGame();
             }
         });
 
         creditsButton.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(ActionEvent e) {
                 showCredits();
             }
         });
 
         scoresButton.addActionListener(new ActionListener() {
-            @Override
             public void actionPerformed(ActionEvent e) {
                 showHighScores();
             }
@@ -124,7 +121,7 @@ public class Clickathon extends JFrame {
         }
     }
 
-    //
+    // Creates a scoreboard using labels
     private void createScoreboard() {
         scoreLabel = new JLabel("Score: 0");
         scoreLabel.setBounds(10, 10, 100, 30);
@@ -143,7 +140,6 @@ public class Clickathon extends JFrame {
         timer = new Timer(1000, new ActionListener() {
             int timeRemaining = GAME_TIME;
 
-            @Override
             public void actionPerformed(ActionEvent e) {
                 if (timeRemaining == 0) {
                     endGame();
@@ -173,7 +169,6 @@ public class Clickathon extends JFrame {
     }
 
     private class ButtonClickListener implements ActionListener {
-        @Override
         public void actionPerformed(ActionEvent e) {
             JButton clickedButton = (JButton) e.getSource();
             score++;
@@ -201,5 +196,12 @@ public class Clickathon extends JFrame {
     private void showHighScores() {
         // Implement a method to display high scores here, possibly using a JOptionPane.
     }
+    
+    public static void main(String[] args) {
+		//SimpleWindow myWindow = new SimpleWindow();
+		Clickathon game = new Clickathon();
+		
+		
+	}
 
 }
