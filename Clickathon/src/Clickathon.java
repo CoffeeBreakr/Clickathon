@@ -34,6 +34,7 @@ public class Clickathon extends JFrame {
 
     private JButton[] buttons = new JButton[BUTTON_COUNT];
     private int score = 0;
+    private JLabel title;
     private JLabel scoreLabel;
     private JTextField initialsField;
     private Timer timer;
@@ -51,14 +52,24 @@ public class Clickathon extends JFrame {
         setVisible(true);
     }
 
+    //**************************************** GAME MENU ********************************************
     private void createGameMenu() { //Create a way to display a highscore label on top of the menu
         JPanel menuPanel = new JPanel();
         menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.Y_AXIS));
 
+        JLabel title = new JLabel("C L I C K A T H O N");
+		title.setFont(new Font("Arial Black", Font.BOLD, 34)); // Set a bigger font
+		title.setForeground(hexToColor("#3498db"));
+	    title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
         JLabel highscoreLabel = new JLabel();
         JButton startButton = new JButton("Start Game");
         JButton creditsButton = new JButton("Credits");
         JButton scoresButton = new JButton("High Scores");
+        
+        startButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        creditsButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        scoresButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         startButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -78,21 +89,39 @@ public class Clickathon extends JFrame {
             }
         });
 
+        
+        menuPanel.add(Box.createVerticalStrut(200));
+	    menuPanel.add(title);
+	    menuPanel.add(Box.createVerticalStrut(20));
         menuPanel.add(highscoreLabel);
+        menuPanel.add(Box.createVerticalStrut(10));
         menuPanel.add(startButton);
+        menuPanel.add(Box.createVerticalStrut(10));
         menuPanel.add(creditsButton);
+        menuPanel.add(Box.createVerticalStrut(10));
         menuPanel.add(scoresButton);
 
         menuPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         add(menuPanel);
+        
+        
     }
 
+    private Color hexToColor(String hexCode) {
+        return new Color(
+                Integer.valueOf(hexCode.substring(1, 3), 16),
+                Integer.valueOf(hexCode.substring(3, 5), 16),
+                Integer.valueOf(hexCode.substring(5, 7), 16)
+        );
+    }
+    
    /*Used to start building the game screen
     * First clears the screen
     * then creates a button, a timer, and a score
     */
     private void startGame() { 
         getContentPane().removeAll();
+        setLayout(null);
         revalidate();
         repaint();
 
@@ -103,6 +132,7 @@ public class Clickathon extends JFrame {
         setVisible(true);
     }
 
+    //**************************************** BUTTONS ********************************************
     //create buttons to be used for the game
     private void createButtons() {
         for (int i = 0; i < BUTTON_COUNT; i++) {
@@ -129,6 +159,7 @@ public class Clickathon extends JFrame {
         }
     }
 
+    //**************************************** SCORE BOARD ********************************************
     // Creates a scoreboard using labels
     private void createScoreboard() {
         scoreLabel = new JLabel("Score: 0");
@@ -144,6 +175,7 @@ public class Clickathon extends JFrame {
         add(initialsField);
     }
 
+    //**************************************** TIMER ********************************************
     private void createTimer() {
         timer = new Timer(1000, new ActionListener() {
             int timeRemaining = GAME_TIME;
@@ -160,6 +192,7 @@ public class Clickathon extends JFrame {
         timer.start();
     }
 
+    //**************************************** GAME END ********************************************
     private void endGame() {
         timer.stop();
         for (JButton button : buttons) {
@@ -176,6 +209,7 @@ public class Clickathon extends JFrame {
         createGameMenu();
     }
 
+    //**************************************** BUTTON CLICK ********************************************
     private class ButtonClickListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             JButton clickedButton = (JButton) e.getSource();
@@ -195,6 +229,7 @@ public class Clickathon extends JFrame {
         }
     }
 
+    //**************************************** CREDIT MENU ********************************************
     private void showCredits() {
         creditsFrame = new JFrame("Credits");
         JTextArea creditsTextArea = new JTextArea(10, 30);
@@ -206,10 +241,21 @@ public class Clickathon extends JFrame {
         creditsFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
+    //**************************************** HIGHSCORE ********************************************
     private void showHighScores() {
         // Implement a method to display high scores here, possibly using a JOptionPane.
+    	creditsFrame = new JFrame("HighScores");
+        JTextArea creditsTextArea = new JTextArea(10, 30);
+        creditsTextArea.setText("");
+        creditsTextArea.setEditable(false);
+        creditsFrame.add(creditsTextArea);
+        creditsFrame.pack();
+        creditsFrame.setVisible(true);
+        creditsFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
     
+    
+    //**************************************** MAIN ********************************************
     public static void main(String[] args) {
 		//SimpleWindow myWindow = new SimpleWindow();
 		Clickathon game = new Clickathon();
