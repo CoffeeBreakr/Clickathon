@@ -3,6 +3,17 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Random;
+import java.io.FileOutputStream;
+import java.io.EOFException;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.io.Serializable;
 
 /*
  *    ~ Basic Game Mechanics ~
@@ -32,6 +43,8 @@ public class Clickathon extends JFrame {
     private static final int MIN_POINT_VALUE = 1;
     private static final int SIZE_MULTIPLIER = 18;
 
+    private static final String HIGH_SCORE_FILE = "highscore.txt";
+
     private JButton[] buttons = new JButton[BUTTON_COUNT];
     private int score = 0;
     private JLabel title;
@@ -39,6 +52,7 @@ public class Clickathon extends JFrame {
     private JTextField initialsField;
     private Timer timer;
     private JFrame creditsFrame;
+    private JButton replayButton;
     private int highScore = 0;
 
     public Clickathon() {
@@ -166,13 +180,13 @@ public class Clickathon extends JFrame {
         scoreLabel.setBounds(10, 10, 100, 30);
         add(scoreLabel);
 
-        JLabel initialsLabel = new JLabel("Initials:");
+        /*JLabel initialsLabel = new JLabel("Initials:");
         initialsLabel.setBounds(10, 50, 60, 30);
         add(initialsLabel);
 
         initialsField = new JTextField();
         initialsField.setBounds(80, 50, 60, 30);
-        add(initialsField);
+        add(initialsField); */
     }
 
     //**************************************** TIMER ********************************************
@@ -199,16 +213,138 @@ public class Clickathon extends JFrame {
             button.setVisible(false);
         }
         int finalScore = score;
-        String initials = initialsField.getText();
-        JOptionPane.showMessageDialog(this, "Game Over! Your score: " + finalScore);
+        
+        //************** Initials 
+        JLabel initialsPromptLabel = new JLabel("Enter your initials:");
+        JTextField initialsInputField = new JTextField();
+        JButton submitButton = new JButton("Submit");
 
-        if (finalScore > highScore) {
-            highScore = finalScore;
+        initialsPromptLabel.setBounds(10, 90, 150, 30);
+        initialsInputField.setBounds(160, 90, 60, 30);
+        submitButton.setBounds(230, 90, 80, 30);
+
+        add(initialsPromptLabel);
+        add(initialsInputField);
+        add(submitButton);
+
+        submitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String initials = initialsInputField.getText();
+                if (!initials.isEmpty()) {
+                    saveHighScore(initials, finalScore);
+                    JOptionPane.showMessageDialog(Clickathon.this, "High score submitted!");
+                    showGameOverPrompt();  // Show "Game Over!" and ask to replay
+                    remove(initialsPromptLabel);
+                    remove(initialsInputField);
+                    remove(submitButton);
+                    
+                } else {
+                    JOptionPane.showMessageDialog(Clickathon.this, "Please enter your initials.");
+                }
+            }
+        });
+        
+        repaint();
+        revalidate();
+    }
+        //****************
+        
+        
+    private void showGameOverPrompt() {
+        int option = JOptionPane.showConfirmDialog(this, "Game Over! Your score: " + score +
+                "\nDo you want to replay?", "Replay", JOptionPane.YES_NO_OPTION);
+        if (option == JOptionPane.YES_OPTION) {
+        	
+            resetGame();
+            
+        } else {
+            getContentPane().removeAll();  // Remove all components
+            revalidate();  // Revalidate the content pane
+            createGameMenu();
+            repaint();
+            setVisible(true);
         }
+    }
+    
+    private void resetGame() {
+        score = 0;
+        scoreLabel.setText("Score: 0");
+        createTimer();
 
-        createGameMenu();
+        // Make buttons visible again and arrange them randomly
+        for (JButton button : buttons) {
+            button.setVisible(true);
+            arrangeButtonsRandomly();
+        }
+        
+        
+        
     }
 
+
+    //**************************************** BINARY FILE ********************************************
+
+    
+    public class HighScoreEntry implements Serializable {
+        private String initials;
+        private int score;
+
+        public HighScoreEntry(String initials, int score) {
+            this.initials = initials;
+            this.score = score;
+        }
+
+        public String getInitials() {
+            return initials;
+        }
+
+        public int getScore() {
+            return score;
+        }
+    }
+    
+    //Sorts the score file
+    private List<Integer> loadHighScores() {
+        List<Integer> highScores = new ArrayList<>();
+
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(HIGH_SCORE_FILE))) {
+            int score;
+            while (true) {
+                try {
+                    score = inputStream.readInt();
+                    highScores.add(score);
+                } catch (EOFException e) {
+                    break; // End of file reached
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace(); // Handle the exception as needed
+            JOptionPane.showMessageDialog(this, "Error loading high scores.");
+        }
+
+        return highScores;
+    }
+    
+    private void saveHighScore(String initials, int score) {
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(HIGH_SCORE_FILE))) {
+            outputStream.writeObject(new HighScoreEntry(initials, score));
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error saving high score.");
+        }
+    }
+    
+    private void loadHighScore() {
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Highscore.txt"))) {
+            highScore = inputStream.readInt();
+        } catch (IOException e) {
+            // Handle the exception as needed
+            // If the file doesn't exist or cannot be read, set highScore to a default value.
+            highScore = 0;
+        }
+    }
+    
     //**************************************** BUTTON CLICK ********************************************
     private class ButtonClickListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
@@ -233,7 +369,7 @@ public class Clickathon extends JFrame {
     private void showCredits() {
         creditsFrame = new JFrame("Credits");
         JTextArea creditsTextArea = new JTextArea(10, 30);
-        creditsTextArea.setText("Authors: Jesse Park & Edwin He");
+        creditsTextArea.setText("Authors: Jesse Park & dwin He");
         creditsTextArea.setEditable(false);
         creditsFrame.add(creditsTextArea);
         creditsFrame.pack();
@@ -259,7 +395,7 @@ public class Clickathon extends JFrame {
     public static void main(String[] args) {
 		//SimpleWindow myWindow = new SimpleWindow();
 		Clickathon game = new Clickathon();
-		
+		game.loadHighScore();
 		
 	}
 
