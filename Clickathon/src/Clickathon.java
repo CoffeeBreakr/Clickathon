@@ -259,11 +259,15 @@ public class Clickathon extends JFrame {
             resetGame();
             
         } else {
-            getContentPane().removeAll();  // Remove all components
-            revalidate();  // Revalidate the content pane
-            createGameMenu();
-            repaint();
-            setVisible(true);
+		
+        getContentPane().removeAll();
+        setLayout(null);
+        revalidate();
+        repaint();
+	dispose();
+
+	Clickathon game = new Clickathon();
+	game.loadHighScore();
         }
     }
     
