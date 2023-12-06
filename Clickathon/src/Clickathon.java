@@ -1,4 +1,3 @@
-//GUI
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -38,23 +37,29 @@ import java.io.Serializable;
 */
 
 public class Clickathon extends JFrame {
-    private static final int BUTTON_COUNT = 5;
+    private static final int CLICK_BUTTON_COUNT = 5;
+    private static final int SPAM_BUTTON_COUNT = 1;
     private static final int GAME_TIME = 15; // in seconds
     private static final int MAX_POINT_VALUE = 5;
     private static final int MIN_POINT_VALUE = 1;
     private static final int SIZE_MULTIPLIER = 18;
+    private static final int BUTTON_CLICKED_COUNT = 5;
     private int score = 0;
 
-    //Data File
+    //Data file
     private static final String HIGH_SCORE_FILE = "highscore.txt";
     private List<HighScoreEntry> highScores = new ArrayList<>();
 
     //GUI
-    private JButton[] buttons = new JButton[BUTTON_COUNT];
+    private ClickButton[] clickButtons = new ClickButton[CLICK_BUTTON_COUNT];
+    private SpamButton[] spamButtons = new SpamButton[SPAM_BUTTON_COUNT];
+    private JLabel title;
     private JLabel scoreLabel;
+    private JTextField initialsField;
     private Timer timer;
     private JFrame creditsFrame;
-    
+    private JButton replayButton;
+    private int highScore = 0;
 
     public Clickathon() {
         setTitle("*~ CLICKATHON ~*");
@@ -62,7 +67,7 @@ public class Clickathon extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //setLayout(null); // Use absolute layout
 
-        loadHighScores();
+	loadHighScores();
         createGameMenu();
 
         setVisible(true);
@@ -148,30 +153,87 @@ public class Clickathon extends JFrame {
         setVisible(true);
     }
 
+   //**************************************** BINARY FILE ********************************************
+
+
+    public class HighScoreEntry implements Serializable {
+    	private String initials;
+    	private int score;
+
+    	public HighScoreEntry(String initials, int score) {
+    		this.initials = initials;
+    		this.score = score;
+    	}
+
+    	public String getInitials() {
+    		return initials;
+    	}
+
+    	public int getScore() {
+    		return score;
+    	}
+    }
+
+    // Load high scores from a file into the array
+    private void loadHighScores() {
+    	try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(HIGH_SCORE_FILE))) {
+    		highScores = (List<HighScoreEntry>) inputStream.readObject();
+    	} catch (IOException | ClassNotFoundException e) {
+    		e.printStackTrace(); // Handle the exception as needed
+    		//JOptionPane.showMessageDialog(this, "Error loading high scores.");
+    	}
+    }
+
+    // Save high scores from the array into a file
+    private void saveHighScores() {
+    	try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(HIGH_SCORE_FILE))) {
+    		outputStream.writeObject(highScores);
+    	} catch (IOException e) {
+    		e.printStackTrace();
+    		JOptionPane.showMessageDialog(this, "Error saving high scores.");
+    	}
+    }
+
     //**************************************** BUTTONS ********************************************
     //create buttons to be used for the game
     private void createButtons() {
-        for (int i = 0; i < BUTTON_COUNT; i++) {
+	//ClickButton
+        for (int i = 0; i < CLICK_BUTTON_COUNT; i++) {
 	    //Generate button value
 	    Random random = new Random();
 	    int pointValue = random.nextInt((MAX_POINT_VALUE - MIN_POINT_VALUE) + 1) + MIN_POINT_VALUE;
 	    //The larger the point value, the smaller the size
 	    int buttonSize = (MAX_POINT_VALUE - pointValue + 1) * SIZE_MULTIPLIER;
-            buttons[i] = new JButton("" + pointValue);
-            buttons[i].setSize(buttonSize,buttonSize);
-            buttons[i].addActionListener(new ButtonClickListener());
-            add(buttons[i]);
+            clickButtons[i] = new ClickButton(pointValue);
+            clickButtons[i].setSize(buttonSize,buttonSize);
+            clickButtons[i].addActionListener(new ButtonClickListener());
+            add(clickButtons[i]);
         }
+	//SpamButton
+        for (int i = 0; i < SPAM_BUTTON_COUNT; i++) {
+	    int pointValue = MIN_POINT_VALUE;
+	    int buttonSize = (MIN_POINT_VALUE + 2) * SIZE_MULTIPLIER;
+            spamButtons[i] = new SpamButton(pointValue);
+            spamButtons[i].setSize(buttonSize,buttonSize);
+            spamButtons[i].addActionListener(new SpamButtonClickListener());
+            add(spamButtons[i]);
+        }
+
         arrangeButtonsRandomly();
     }
 
     //takes created buttons and puts them in random points of the screen
     private void arrangeButtonsRandomly() {
         Random random = new Random();
-        for (int i = 0; i < BUTTON_COUNT; i++) {
+        for (int i = 0; i < CLICK_BUTTON_COUNT; i++) {
             int x = random.nextInt(getWidth() - 100);
             int y = random.nextInt(getHeight() - 50);
-            buttons[i].setLocation(x, y);
+            clickButtons[i].setLocation(x, y);
+        }
+        for (int i = 0; i < SPAM_BUTTON_COUNT; i++) {
+            int x = random.nextInt(getWidth() - 100);
+            int y = random.nextInt(getHeight() - 50);
+            spamButtons[i].setLocation(x, y);
         }
     }
 
@@ -208,52 +270,13 @@ public class Clickathon extends JFrame {
         timer.start();
     }
 
-    
-    //**************************************** BINARY FILE ********************************************
-    
-    
-    public class HighScoreEntry implements Serializable {
-    	private String initials;
-    	private int score;
-    	
-    	public HighScoreEntry(String initials, int score) {
-    		this.initials = initials;
-    		this.score = score;
-    	}
-    	
-    	public String getInitials() {
-    		return initials;
-    	}
-    	
-    	public int getScore() {
-    		return score;
-    	}
-    }
-    
-    // Load high scores from a file into the array
-    private void loadHighScores() {
-    	try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(HIGH_SCORE_FILE))) {
-    		highScores = (List<HighScoreEntry>) inputStream.readObject();
-    	} catch (IOException | ClassNotFoundException e) {
-    		e.printStackTrace(); // Handle the exception as needed
-    		JOptionPane.showMessageDialog(this, "Error loading high scores.");
-    	}
-    }
-    
-    // Save high scores from the array into a file
-    private void saveHighScores() {
-    	try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(HIGH_SCORE_FILE))) {
-    		outputStream.writeObject(highScores);
-    	} catch (IOException e) {
-    		e.printStackTrace();
-    		JOptionPane.showMessageDialog(this, "Error saving high scores.");
-    	}
-    }
-    
     //**************************************** GAME END ********************************************
     private void endGame() {
         timer.stop();
-        for (JButton button : buttons) {
+        for (JButton button : clickButtons) {
+            button.setVisible(false);
+        }
+        for (JButton button : spamButtons) {
             button.setVisible(false);
         }
         int finalScore = score;
@@ -282,6 +305,7 @@ public class Clickathon extends JFrame {
                     remove(initialsPromptLabel);
                     remove(initialsInputField);
                     remove(submitButton);
+                    
                 } else {
                     JOptionPane.showMessageDialog(Clickathon.this, "Please enter your initials.");
                 }
@@ -291,7 +315,7 @@ public class Clickathon extends JFrame {
         repaint();
         revalidate();
     }
-    
+
     private void saveHighScore(String initials, int score) {
         highScores.add(new HighScoreEntry(initials, score));
         Collections.sort(highScores, (entry1, entry2) -> Integer.compare(entry2.getScore(), entry1.getScore())); // Sort in descending order
@@ -308,15 +332,11 @@ public class Clickathon extends JFrame {
             resetGame();
             
         } else {
-		
-        getContentPane().removeAll();
-        setLayout(null);
-        revalidate();
-        repaint();
-	dispose();
+            getContentPane().removeAll();  // Remove all components
+            revalidate();  // Revalidate the content pane
+	    dispose();
 
-	Clickathon game = new Clickathon();
-	game.loadHighScores();
+	    Clickathon game = new Clickathon();
         }
     }
     
@@ -326,25 +346,27 @@ public class Clickathon extends JFrame {
         createTimer();
 
         // Make buttons visible again and arrange them randomly
-        for (JButton button : buttons) {
+        for (JButton button : clickButtons) {
+            button.setVisible(true);
+            arrangeButtonsRandomly();
+	}
+        for (JButton button : spamButtons) {
             button.setVisible(true);
             arrangeButtonsRandomly();
         }
-        
-        
-        
     }
+
 
     //**************************************** BUTTON CLICK ********************************************
     private class ButtonClickListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            JButton clickedButton = (JButton) e.getSource();
-            score += Integer.parseInt((clickedButton.getText()));
+            ClickButton clickedButton = (ClickButton) e.getSource();
+            score += clickedButton.getPointValue();
             scoreLabel.setText("Score: " + score);
  	    // Set the button to a random value	    
 	    Random random = new Random();
 	    int pointValue = random.nextInt((MAX_POINT_VALUE - MIN_POINT_VALUE) + 1) + MIN_POINT_VALUE;
-	    clickedButton.setText("" + pointValue);
+	    clickedButton.setPointValue(pointValue);
 	    //Set the button to a size
 	    int buttonSize = (MAX_POINT_VALUE - pointValue + 1) * SIZE_MULTIPLIER;
 	    clickedButton.setSize(buttonSize, buttonSize);
@@ -352,6 +374,24 @@ public class Clickathon extends JFrame {
             int x = random.nextInt(getWidth() - 100);
             int y = random.nextInt(getHeight() - 50);
             clickedButton.setLocation(x, y);
+        }
+    }
+    private class SpamButtonClickListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            SpamButton clickedButton = (SpamButton) e.getSource();
+	    clickedButton.addClick();
+            score += clickedButton.getPointValue();
+            scoreLabel.setText("Score: " + score);
+ 	    // Set the button to a random size	    
+	    Random random = new Random();
+	    int pointValue = random.nextInt((MAX_POINT_VALUE - MIN_POINT_VALUE) + 1) + MIN_POINT_VALUE;
+	    int buttonSize = (MAX_POINT_VALUE - pointValue + 1) * SIZE_MULTIPLIER;
+            // Move the button to a random location if it is clicked X times
+	    if(clickedButton.getClickCount() % BUTTON_CLICKED_COUNT == 0) {
+            	int x = random.nextInt(getWidth() - 100);
+            	int y = random.nextInt(getHeight() - 50);
+            	clickedButton.setLocation(x, y);
+	    }
         }
     }
 
@@ -377,14 +417,4 @@ public class Clickathon extends JFrame {
 
         JOptionPane.showMessageDialog(this, highScoreText.toString(), "High Scores", JOptionPane.INFORMATION_MESSAGE);
     }
-    
-    
-    //**************************************** MAIN ********************************************
-    public static void main(String[] args) {
-		//SimpleWindow myWindow = new SimpleWindow();
-		Clickathon game = new Clickathon();
-		game.loadHighScores();
-		
-	}
-
 }
