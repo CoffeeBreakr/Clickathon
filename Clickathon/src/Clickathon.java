@@ -1,15 +1,16 @@
+//GUI
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Random;
+
+//File & Data
 import java.io.FileOutputStream;
-import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,18 +43,18 @@ public class Clickathon extends JFrame {
     private static final int MAX_POINT_VALUE = 5;
     private static final int MIN_POINT_VALUE = 1;
     private static final int SIZE_MULTIPLIER = 18;
-
-    private static final String HIGH_SCORE_FILE = "highscore.txt";
-
-    private JButton[] buttons = new JButton[BUTTON_COUNT];
     private int score = 0;
-    private JLabel title;
+
+    //Data File
+    private static final String HIGH_SCORE_FILE = "highscore.txt";
+    private List<HighScoreEntry> highScores = new ArrayList<>();
+
+    //GUI
+    private JButton[] buttons = new JButton[BUTTON_COUNT];
     private JLabel scoreLabel;
-    private JTextField initialsField;
     private Timer timer;
     private JFrame creditsFrame;
-    private JButton replayButton;
-    private int highScore = 0;
+    
 
     public Clickathon() {
         setTitle("*~ CLICKATHON ~*");
@@ -61,6 +62,7 @@ public class Clickathon extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //setLayout(null); // Use absolute layout
 
+        loadHighScores();
         createGameMenu();
 
         setVisible(true);
@@ -206,6 +208,48 @@ public class Clickathon extends JFrame {
         timer.start();
     }
 
+    
+    //**************************************** BINARY FILE ********************************************
+    
+    
+    public class HighScoreEntry implements Serializable {
+    	private String initials;
+    	private int score;
+    	
+    	public HighScoreEntry(String initials, int score) {
+    		this.initials = initials;
+    		this.score = score;
+    	}
+    	
+    	public String getInitials() {
+    		return initials;
+    	}
+    	
+    	public int getScore() {
+    		return score;
+    	}
+    }
+    
+    // Load high scores from a file into the array
+    private void loadHighScores() {
+    	try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(HIGH_SCORE_FILE))) {
+    		highScores = (List<HighScoreEntry>) inputStream.readObject();
+    	} catch (IOException | ClassNotFoundException e) {
+    		e.printStackTrace(); // Handle the exception as needed
+    		JOptionPane.showMessageDialog(this, "Error loading high scores.");
+    	}
+    }
+    
+    // Save high scores from the array into a file
+    private void saveHighScores() {
+    	try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(HIGH_SCORE_FILE))) {
+    		outputStream.writeObject(highScores);
+    	} catch (IOException e) {
+    		e.printStackTrace();
+    		JOptionPane.showMessageDialog(this, "Error saving high scores.");
+    	}
+    }
+    
     //**************************************** GAME END ********************************************
     private void endGame() {
         timer.stop();
@@ -238,7 +282,6 @@ public class Clickathon extends JFrame {
                     remove(initialsPromptLabel);
                     remove(initialsInputField);
                     remove(submitButton);
-                    
                 } else {
                     JOptionPane.showMessageDialog(Clickathon.this, "Please enter your initials.");
                 }
@@ -247,6 +290,12 @@ public class Clickathon extends JFrame {
         
         repaint();
         revalidate();
+    }
+    
+    private void saveHighScore(String initials, int score) {
+        highScores.add(new HighScoreEntry(initials, score));
+        Collections.sort(highScores, (entry1, entry2) -> Integer.compare(entry2.getScore(), entry1.getScore())); // Sort in descending order
+        saveHighScores(); // Save the updated high scores array
     }
         //****************
         
@@ -267,7 +316,7 @@ public class Clickathon extends JFrame {
 	dispose();
 
 	Clickathon game = new Clickathon();
-	game.loadHighScore();
+	game.loadHighScores();
         }
     }
     
@@ -286,69 +335,6 @@ public class Clickathon extends JFrame {
         
     }
 
-
-    //**************************************** BINARY FILE ********************************************
-
-    
-    public class HighScoreEntry implements Serializable {
-        private String initials;
-        private int score;
-
-        public HighScoreEntry(String initials, int score) {
-            this.initials = initials;
-            this.score = score;
-        }
-
-        public String getInitials() {
-            return initials;
-        }
-
-        public int getScore() {
-            return score;
-        }
-    }
-    
-    //Sorts the score file
-    private List<Integer> loadHighScores() {
-        List<Integer> highScores = new ArrayList<>();
-
-        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(HIGH_SCORE_FILE))) {
-            int score;
-            while (true) {
-                try {
-                    score = inputStream.readInt();
-                    highScores.add(score);
-                } catch (EOFException e) {
-                    break; // End of file reached
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace(); // Handle the exception as needed
-            JOptionPane.showMessageDialog(this, "Error loading high scores.");
-        }
-
-        return highScores;
-    }
-    
-    private void saveHighScore(String initials, int score) {
-        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(HIGH_SCORE_FILE))) {
-            outputStream.writeObject(new HighScoreEntry(initials, score));
-        } catch (IOException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error saving high score.");
-        }
-    }
-    
-    private void loadHighScore() {
-        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("Highscore.txt"))) {
-            highScore = inputStream.readInt();
-        } catch (IOException e) {
-            // Handle the exception as needed
-            // If the file doesn't exist or cannot be read, set highScore to a default value.
-            highScore = 0;
-        }
-    }
-    
     //**************************************** BUTTON CLICK ********************************************
     private class ButtonClickListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
@@ -373,7 +359,7 @@ public class Clickathon extends JFrame {
     private void showCredits() {
         creditsFrame = new JFrame("Credits");
         JTextArea creditsTextArea = new JTextArea(10, 30);
-        creditsTextArea.setText("Authors: Jesse Park & dwin He");
+        creditsTextArea.setText("Authors: Jesse Park & Edwin He");
         creditsTextArea.setEditable(false);
         creditsFrame.add(creditsTextArea);
         creditsFrame.pack();
@@ -383,15 +369,13 @@ public class Clickathon extends JFrame {
 
     //**************************************** HIGHSCORE ********************************************
     private void showHighScores() {
-        // Implement a method to display high scores here, possibly using a JOptionPane.
-    	creditsFrame = new JFrame("HighScores");
-        JTextArea creditsTextArea = new JTextArea(10, 30);
-        creditsTextArea.setText("");
-        creditsTextArea.setEditable(false);
-        creditsFrame.add(creditsTextArea);
-        creditsFrame.pack();
-        creditsFrame.setVisible(true);
-        creditsFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        StringBuilder highScoreText = new StringBuilder();
+        for (int i = 0; i < highScores.size(); i++) {
+            HighScoreEntry entry = highScores.get(i);
+            highScoreText.append(i + 1).append(". ").append(entry.getInitials()).append(": ").append(entry.getScore()).append("\n");
+        }
+
+        JOptionPane.showMessageDialog(this, highScoreText.toString(), "High Scores", JOptionPane.INFORMATION_MESSAGE);
     }
     
     
@@ -399,7 +383,7 @@ public class Clickathon extends JFrame {
     public static void main(String[] args) {
 		//SimpleWindow myWindow = new SimpleWindow();
 		Clickathon game = new Clickathon();
-		game.loadHighScore();
+		game.loadHighScores();
 		
 	}
 
