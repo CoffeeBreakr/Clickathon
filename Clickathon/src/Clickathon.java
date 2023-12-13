@@ -42,7 +42,9 @@ public class Clickathon extends JFrame {
     private static final int GAME_TIME = 15; // in seconds
     private static final int MAX_POINT_VALUE = 5;
     private static final int MIN_POINT_VALUE = 1;
-    private static final int SIZE_MULTIPLIER = 18;
+    private static final int SIZE_MULTIPLIER = 22;	// button size
+    private static final int BUTTON_FONT_SIZE = 12;
+    private static final int SIZE_OFFSET = 26;		// minimum button size
     private static final int BUTTON_CLICKED_COUNT = 5;
     private int score = 0;
 
@@ -203,19 +205,21 @@ public class Clickathon extends JFrame {
 	    Random random = new Random();
 	    int pointValue = random.nextInt((MAX_POINT_VALUE - MIN_POINT_VALUE) + 1) + MIN_POINT_VALUE;
 	    //The larger the point value, the smaller the size
-	    int buttonSize = (MAX_POINT_VALUE - pointValue + 1) * SIZE_MULTIPLIER;
+	    int buttonSize = (MAX_POINT_VALUE - pointValue + 1) * SIZE_MULTIPLIER + SIZE_OFFSET;
             clickButtons[i] = new ClickButton(pointValue);
             clickButtons[i].setSize(buttonSize,buttonSize);
             clickButtons[i].addActionListener(new ButtonClickListener());
+	    clickButtons[i].setFont(new Font("Arial", Font.PLAIN, BUTTON_FONT_SIZE));
             add(clickButtons[i]);
         }
 	//SpamButton
         for (int i = 0; i < SPAM_BUTTON_COUNT; i++) {
 	    int pointValue = MIN_POINT_VALUE;
-	    int buttonSize = (MIN_POINT_VALUE + 2) * SIZE_MULTIPLIER;
+	    int buttonSize = (MIN_POINT_VALUE + 2) * SIZE_MULTIPLIER + SIZE_OFFSET;
             spamButtons[i] = new SpamButton(pointValue);
             spamButtons[i].setSize(buttonSize,buttonSize);
             spamButtons[i].addActionListener(new SpamButtonClickListener());
+	    spamButtons[i].setFont(new Font("Arial", Font.PLAIN, BUTTON_FONT_SIZE));
             add(spamButtons[i]);
         }
 
@@ -368,7 +372,7 @@ public class Clickathon extends JFrame {
 	    int pointValue = random.nextInt((MAX_POINT_VALUE - MIN_POINT_VALUE) + 1) + MIN_POINT_VALUE;
 	    clickedButton.setPointValue(pointValue);
 	    //Set the button to a size
-	    int buttonSize = (MAX_POINT_VALUE - pointValue + 1) * SIZE_MULTIPLIER;
+	    int buttonSize = (MAX_POINT_VALUE - pointValue + 1) * SIZE_MULTIPLIER + SIZE_OFFSET;
 	    clickedButton.setSize(buttonSize, buttonSize);
             // Move the button to a random location
             int x = random.nextInt(getWidth() - 100);
@@ -385,7 +389,7 @@ public class Clickathon extends JFrame {
  	    // Set the button to a random size	    
 	    Random random = new Random();
 	    int pointValue = random.nextInt((MAX_POINT_VALUE - MIN_POINT_VALUE) + 1) + MIN_POINT_VALUE;
-	    int buttonSize = (MAX_POINT_VALUE - pointValue + 1) * SIZE_MULTIPLIER;
+	    int buttonSize = (MAX_POINT_VALUE - pointValue + 1) * SIZE_MULTIPLIER + SIZE_OFFSET;
             // Move the button to a random location if it is clicked X times
 	    if(clickedButton.getClickCount() % BUTTON_CLICKED_COUNT == 0) {
             	int x = random.nextInt(getWidth() - 100);
