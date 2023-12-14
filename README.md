@@ -1,7 +1,8 @@
 # Clickathon
 CS31 Final Project - Java Game
 
-
+# Directions
+`$ git clone https://github.com/CoffeeBreakr/Clickathon.git && cd Clickathon/Clickathon/bin/ && java StartGame`
 
 # FINISHED
 * Classes
